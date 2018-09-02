@@ -51,8 +51,8 @@ public class Dynamobee implements InitializingBean {
 	 * For more details about <tt>DynamoDB</tt> please see com.amazonaws.services.dynamodbv2.AmazonDynamoDB docs
 	 * </p>
 	 *
-	 * @param dynamoDB database connection client
-	 * @see DynamoDB
+	 * @param amazonDynamoDB database connection client
+	 * @see AmazonDynamoDB
 	 */
 	public Dynamobee(AmazonDynamoDB amazonDynamoDB) {
 		this(new DynamoDB(amazonDynamoDB));

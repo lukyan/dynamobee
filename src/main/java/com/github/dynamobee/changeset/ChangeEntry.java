@@ -7,7 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 
 
 /**
- * Entry in the changes collection log {@link com.github.dynamobee.Dynamobee#DEFAULT_CHANGELOG_COLLECTION_NAME}
+ * Entry in the changes collection log {@link com.github.dynamobee.Dynamobee#DEFAULT_CHANGELOG_TABLE_NAME}
  * Type: entity class.
  */
 public class ChangeEntry {
