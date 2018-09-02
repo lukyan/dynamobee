@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.org/stefanjauker/dynamobee.svg?branch=master)](https://travis-ci.org/stefanjauker/dynamobee)  [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.dynamobee/dynamobee/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.dynamobee/dynamobee) [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/dynamobee/dynamobee/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/stefanjauker/dynamobee.svg?branch=master)](https://travis-ci.org/stefanjauker/dynamobee)  [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.dynamobee/dynamobee/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.dynamobee/dynamobee) [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/stefanjauker/dynamobee/blob/master/LICENSE)
 ---
-#DynamoBee
-This tool is forked off [mongobee](https://github.com/mongobee/mongobee) repo that is maintained by @mongobee.
+# DynamoBee
+This tool is forked off [mongobee](https://github.com/mongobee/mongobee) repo that is maintained by the @mongobee community.
 
 **dynamobee** is a Java tool which helps you to *manage changes* in your DynamoDB and *synchronize* them with your application.
 The concept is very similar to other db migration tools such as [Liquibase](http://www.liquibase.org) or [Flyway](http://flywaydb.org) but *without using XML/JSON/YML files*.
