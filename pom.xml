@@ -7,7 +7,7 @@
 
 	<name>dynamobee</name>
 	<description>DynamoDB data migration tool for Java</description>
-	<url>https://github.com/stefanjauker/dynamobee</url>
+	<url>https://github.com/dynamobee/dynamobee</url>
 
 	<groupId>com.github.dynamobee</groupId>
 	<artifactId>dynamobee</artifactId>
@@ -22,9 +22,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git@github.com:stefanjauker/dynamobee.git</connection>
-		<developerConnection>scm:git:git@github.com:stefanjauker/dynamobee.git</developerConnection>
-		<url>git@github.com:stefanjauker/dynamobee.git</url>
+		<connection>scm:git:git@github.com:dynamobee/dynamobee.git</connection>
+		<developerConnection>scm:git:git@github.com:dynamobee/dynamobee.git</developerConnection>
+		<url>git@github.com:dynamobee/dynamobee.git</url>
 		<tag>dynamobee-tag</tag>
 	</scm>
 
