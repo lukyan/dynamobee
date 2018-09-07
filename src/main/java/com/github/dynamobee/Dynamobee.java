@@ -335,7 +335,7 @@ public class Dynamobee implements InitializingBean {
 
 		if (dynamoDBMapperConfig != null && dynamoDBMapperConfig.getTableNameOverride() != null
 				&& dynamoDBMapperConfig.getTableNameOverride().getTableNamePrefix() != null) {
-			changelogTableName = changelogTableName + dynamoDBMapperConfig.getTableNameOverride().getTableNamePrefix();
+			changelogTableName = dynamoDBMapperConfig.getTableNameOverride().getTableNamePrefix() + changelogTableName;
 		}
 
 		this.dao.setChangelogTableName(changelogTableName);
