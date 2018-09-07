@@ -36,7 +36,7 @@ In this case the migration process will be executed automatically on startup.
 ```java
 @Bean
 public Dynamobee dynamobee(){
-  Dynamobee runner = new Dynamobee(dynamoDB); //DynamoDB Client: see com.amazonaws.services.dynamodbv2.document.DynamoDB
+  Dynamobee runner = new Dynamobee(db); //DynamoDB Client: com.amazonaws.services.dynamodbv2.AmazonDynamoDB
   runner.setChangeLogsScanPackage(
        "com.example.yourapp.changelogs"); // the package to be scanned for changesets
   
@@ -49,7 +49,7 @@ public Dynamobee dynamobee(){
 Using dynamobee without a spring context has similar configuration but you have to remember to run `execute()` method to start a migration process.
 
 ```java
-Dynamobee runner = new Dynamobee(dynamoDB); //DynamoDB Client: see com.amazonaws.services.dynamodbv2.document.DynamoDB
+Dynamobee runner = new Dynamobee(db); //DynamoDB Client: see com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 runner.setChangeLogsScanPackage(
      "com.example.yourapp.changelogs"); // package to scan for changesets
 
