@@ -24,8 +24,7 @@ With Maven
 ```
 With Gradle
 ```groovy
-compile 'org.javassist:javassist:3.18.2-GA' // workaround for ${javassist.version} placeholder issue*
-compile 'com.github.dynamobee:dynamobee:0.13'
+compile 'com.github.dynamobee:dynamobee'
 ```
 
 ### Usage with Spring
@@ -119,12 +118,36 @@ public void someChange1() {
 }
 
 @ChangeSet(order = "002", id = "someChangeWithDynamoDB", author = "testAuthor")
-public void someChange2(DynamoDB db) {
+public void someChange2(DynamoDB dynamoDB) {
   // type: com.amazonaws.services.dynamodbv2.document.DynamoDB
-  // example: 
-  MongoCollection<Document> mycollection = db.getCollection("mycollection");
-  Document doc = new Document("testName", "example").append("test", "1");
-  mycollection.insertOne(doc);
+}
+
+@ChangeSet(order = "003", id = "someChangeWithAmazonDynamoDB", author = "testAuthor")
+public void someChange3(AmazonDynamoDB amazonDynamoDB) {
+  // type: com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+}
+
+@ChangeSet(order = "004", id = "someChangeWithDynamoDBTemplate", author = "testAuthor")
+public void someChange4(DynamoDBTemplate dynamoDBTemplate) {
+  // type: org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate
+}
+
+@ChangeSet(order = "005", id = "someChangeWithDynamoDBTemplateAndEnvironment", author = "testAuthor")
+public void someChange5(DynamoDBTemplate dynamoDBTemplate, Environment environment) {
+  // type: org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate
+  // type: org.springframework.core.env.Environment
+}
+
+@ChangeSet(order = "006", id = "someChangeWithDynamoDBTemplateAndAmazonDynamoDB", author = "testAuthor")
+public void someChange6(DynamoDBTemplate dynamoDBTemplate, AmazonDynamoDB amazonDynamoDB) {
+  // type: org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate
+  // type: com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+}
+
+@ChangeSet(order = "007", id = "someChangeWithDynamoDBTemplateAndAmazonDynamoDB", author = "testAuthor")
+public void someChange6(AmazonDynamoDB amazonDynamoDB, DynamoDBTemplate dynamoDBTemplate) {
+  // type: com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+  // type: org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate
 }
 
 ```

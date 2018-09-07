@@ -11,6 +11,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.env.Environment;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.github.dynamobee.changeset.ChangeEntry;
 import com.github.dynamobee.dao.DynamobeeDao;
@@ -40,8 +41,28 @@ public class Dynamobee implements InitializingBean {
 	private AmazonDynamoDB amazonDynamoDB;
 	private DynamoDB dynamoDB;
 	private DynamoDBTemplate dynamoDBTemplate;
+	private DynamoDBMapperConfig dynamoDBMapperConfig;
 	private Environment springEnvironment;
 
+
+	/**
+	 * <p>
+	 * Constructor takes com.amazonaws.services.dynamodbv2.AmazonDynamoDB and
+	 * com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig object as a parameter.
+	 * </p>
+	 *
+	 * @param amazonDynamoDB database connection client
+	 * @param dynamoDBMapperConfig dynamodb config used to override table names
+	 * @see AmazonDynamoDB
+	 */
+	public Dynamobee(AmazonDynamoDB amazonDynamoDB, DynamoDBMapperConfig dynamoDBMapperConfig) {
+		this.amazonDynamoDB = amazonDynamoDB;
+		this.dynamoDBTemplate = new DynamoDBTemplate(amazonDynamoDB, dynamoDBMapperConfig);
+		this.dao = new DynamobeeDao(DEFAULT_CHANGELOG_TABLE_NAME, DEFAULT_WAIT_FOR_LOCK,
+				DEFAULT_CHANGE_LOG_LOCK_WAIT_TIME, DEFAULT_CHANGE_LOG_LOCK_POLL_RATE, DEFAULT_THROW_EXCEPTION_IF_CANNOT_OBTAIN_LOCK);
+
+		this.setChangelogTableName(DEFAULT_CHANGELOG_TABLE_NAME);
+	}
 
 	/**
 	 * <p>
@@ -55,26 +76,7 @@ public class Dynamobee implements InitializingBean {
 	 * @see AmazonDynamoDB
 	 */
 	public Dynamobee(AmazonDynamoDB amazonDynamoDB) {
-		this(new DynamoDB(amazonDynamoDB));
-		this.amazonDynamoDB = amazonDynamoDB;
-
-	}
-
-	/**
-	 * <p>
-	 * Constructor takes com.amazonaws.services.dynamodbv2.document.DynamoDB object as a parameter.
-	 * </p>
-	 * <p>
-	 * For more details about <tt>DynamoDB</tt> please see com.amazonaws.services.dynamodbv2.document.DynamoDB docs
-	 * </p>
-	 *
-	 * @param dynamoDB database connection client
-	 * @see DynamoDB
-	 */
-	public Dynamobee(DynamoDB dynamoDB) {
-		this.dynamoDB = dynamoDB;
-		this.dao = new DynamobeeDao(DEFAULT_CHANGELOG_TABLE_NAME, DEFAULT_WAIT_FOR_LOCK,
-				DEFAULT_CHANGE_LOG_LOCK_WAIT_TIME, DEFAULT_CHANGE_LOG_LOCK_POLL_RATE, DEFAULT_THROW_EXCEPTION_IF_CANNOT_OBTAIN_LOCK);
+		this(amazonDynamoDB, null);
 	}
 
 	/**
@@ -176,16 +178,30 @@ public class Dynamobee implements InitializingBean {
 			return changeSetMethod.invoke(changeLogInstance, amazonDynamoDB);
 		} else if (changeSetMethod.getParameterTypes().length == 1
 				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBTemplate.class)) {
-			logger.debug("method with MongoTemplate argument");
+			logger.debug("method with DynamoDBTemplate argument");
 
 			return changeSetMethod.invoke(changeLogInstance, dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB));
 		} else if (changeSetMethod.getParameterTypes().length == 2
 				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBTemplate.class)
 				&& changeSetMethod.getParameterTypes()[1].equals(Environment.class)) {
-			logger.debug("method with MongoTemplate and environment arguments");
+			logger.debug("method with DynamoDBTemplate and Environment arguments");
 
 			return changeSetMethod.invoke(changeLogInstance, dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB),
 					springEnvironment);
+		} else if (changeSetMethod.getParameterTypes().length == 2
+				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBTemplate.class)
+				&& changeSetMethod.getParameterTypes()[1].equals(AmazonDynamoDB.class)) {
+			logger.debug("method with DynamoDBTemplate and AmazonDynamoDB arguments");
+
+			return changeSetMethod.invoke(changeLogInstance, dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB),
+					amazonDynamoDB);
+		} else if (changeSetMethod.getParameterTypes().length == 2
+				&& changeSetMethod.getParameterTypes()[0].equals(AmazonDynamoDB.class)
+				&& changeSetMethod.getParameterTypes()[1].equals(DynamoDBTemplate.class)) {
+			logger.debug("method with AmazonDynamoDB and DynamoDBTemplate arguments");
+
+			return changeSetMethod.invoke(changeLogInstance, amazonDynamoDB,
+					dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB));
 		} else if (changeSetMethod.getParameterTypes().length == 0) {
 			logger.debug("method with no params");
 
@@ -306,7 +322,7 @@ public class Dynamobee implements InitializingBean {
 	}
 
 	/**
-	 * Overwrites a default dynamobee changelog collection hardcoded in DEFAULT_CHANGELOG_COLLECTION_NAME.
+	 * Overwrites a default dynamobee changelog collection hardcoded in DEFAULT_CHANGELOG_TABLE_NAME.
 	 *
 	 * CAUTION! Use this method carefully - when changing the name on a existing system,
 	 * your changelogs will be executed again on your DynamoDB instance
@@ -315,7 +331,14 @@ public class Dynamobee implements InitializingBean {
 	 * @return Dynamobee object for fluent interface
 	 */
 	public Dynamobee setChangelogTableName(String changelogTableName) {
+
+		if (dynamoDBMapperConfig != null && dynamoDBMapperConfig.getTableNameOverride() != null
+				&& dynamoDBMapperConfig.getTableNameOverride().getTableNamePrefix() != null) {
+			changelogTableName = changelogTableName + dynamoDBMapperConfig.getTableNameOverride().getTableNamePrefix();
+		}
+
 		this.dao.setChangelogTableName(changelogTableName);
+
 		return this;
 	}
 }
