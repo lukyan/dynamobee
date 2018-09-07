@@ -59,6 +59,7 @@ public class Dynamobee implements InitializingBean {
 		this.amazonDynamoDB = amazonDynamoDB;
 		this.dynamoDBMapperConfig = dynamoDBMapperConfig;
 		this.dynamoDBTemplate = new DynamoDBTemplate(amazonDynamoDB, dynamoDBMapperConfig);
+		this.dynamoDB = new DynamoDB(amazonDynamoDB);
 		this.dao = new DynamobeeDao(DEFAULT_CHANGELOG_TABLE_NAME, DEFAULT_WAIT_FOR_LOCK,
 				DEFAULT_CHANGE_LOG_LOCK_WAIT_TIME, DEFAULT_CHANGE_LOG_LOCK_POLL_RATE, DEFAULT_THROW_EXCEPTION_IF_CANNOT_OBTAIN_LOCK);
 
