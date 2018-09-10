@@ -11,6 +11,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.env.Environment;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.github.dynamobee.changeset.ChangeEntry;
@@ -41,6 +42,7 @@ public class Dynamobee implements InitializingBean {
 	private AmazonDynamoDB amazonDynamoDB;
 	private DynamoDB dynamoDB;
 	private DynamoDBTemplate dynamoDBTemplate;
+	private DynamoDBMapper dynamoDBMapper;
 	private DynamoDBMapperConfig dynamoDBMapperConfig;
 	private Environment springEnvironment;
 
@@ -57,8 +59,13 @@ public class Dynamobee implements InitializingBean {
 	 */
 	public Dynamobee(AmazonDynamoDB amazonDynamoDB, DynamoDBMapperConfig dynamoDBMapperConfig) {
 		this.amazonDynamoDB = amazonDynamoDB;
-		this.dynamoDBMapperConfig = dynamoDBMapperConfig;
-		this.dynamoDBTemplate = new DynamoDBTemplate(amazonDynamoDB, dynamoDBMapperConfig);
+		if (dynamoDBMapperConfig != null) {
+			this.dynamoDBMapperConfig = dynamoDBMapperConfig;
+		} else {
+			this.dynamoDBMapperConfig = DynamoDBMapperConfig.DEFAULT;
+		}
+		this.dynamoDBMapper = new DynamoDBMapper(amazonDynamoDB, this.dynamoDBMapperConfig);
+		this.dynamoDBTemplate = new DynamoDBTemplate(amazonDynamoDB, this.dynamoDBMapperConfig);
 		this.dynamoDB = new DynamoDB(amazonDynamoDB);
 		this.dao = new DynamobeeDao(DEFAULT_CHANGELOG_TABLE_NAME, DEFAULT_WAIT_FOR_LOCK,
 				DEFAULT_CHANGE_LOG_LOCK_WAIT_TIME, DEFAULT_CHANGE_LOG_LOCK_POLL_RATE, DEFAULT_THROW_EXCEPTION_IF_CANNOT_OBTAIN_LOCK);
@@ -115,6 +122,9 @@ public class Dynamobee implements InitializingBean {
 
 		try {
 			executeMigration();
+		} catch (Exception e) {
+			logger.error("Dynamobee migration failed", e);
+			throw e;
 		} finally {
 			logger.info("Dynamobee is releasing process lock.");
 			dao.releaseProcessLock();
@@ -173,23 +183,46 @@ public class Dynamobee implements InitializingBean {
 			logger.debug("method with DynamoDB argument");
 
 			return changeSetMethod.invoke(changeLogInstance, db);
+
 		} else if (changeSetMethod.getParameterTypes().length == 1
 				&& changeSetMethod.getParameterTypes()[0].equals(AmazonDynamoDB.class)) {
 			logger.debug("method with AmazonDynamoDB argument");
 
 			return changeSetMethod.invoke(changeLogInstance, amazonDynamoDB);
+
 		} else if (changeSetMethod.getParameterTypes().length == 1
 				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBTemplate.class)) {
 			logger.debug("method with DynamoDBTemplate argument");
 
-			return changeSetMethod.invoke(changeLogInstance, dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB));
+			return changeSetMethod.invoke(changeLogInstance,
+					dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB));
+
 		} else if (changeSetMethod.getParameterTypes().length == 2
 				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBTemplate.class)
 				&& changeSetMethod.getParameterTypes()[1].equals(Environment.class)) {
 			logger.debug("method with DynamoDBTemplate and Environment arguments");
 
-			return changeSetMethod.invoke(changeLogInstance, dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB),
+			return changeSetMethod.invoke(changeLogInstance,
+					dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB),
 					springEnvironment);
+
+		} else if (changeSetMethod.getParameterTypes().length == 2
+				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBMapper.class)
+				&& changeSetMethod.getParameterTypes()[1].equals(AmazonDynamoDB.class)) {
+			logger.debug("method with DynamoDBMapper and AmazonDynamoDB arguments");
+
+			return changeSetMethod.invoke(changeLogInstance, dynamoDBMapper != null ? dynamoDBMapper : new DynamoDBMapper(amazonDynamoDB),
+					amazonDynamoDB);
+
+		} else if (changeSetMethod.getParameterTypes().length == 2
+				&& changeSetMethod.getParameterTypes()[0].equals(AmazonDynamoDB.class)
+				&& changeSetMethod.getParameterTypes()[1].equals(DynamoDBMapper.class)) {
+
+			logger.debug("method with AmazonDynamoDB and DynamoDBMapper arguments");
+
+			return changeSetMethod.invoke(changeLogInstance, amazonDynamoDB,
+					dynamoDBMapper != null ? dynamoDBMapper : new DynamoDBMapper(amazonDynamoDB));
+
 		} else if (changeSetMethod.getParameterTypes().length == 2
 				&& changeSetMethod.getParameterTypes()[0].equals(DynamoDBTemplate.class)
 				&& changeSetMethod.getParameterTypes()[1].equals(AmazonDynamoDB.class)) {
@@ -197,6 +230,7 @@ public class Dynamobee implements InitializingBean {
 
 			return changeSetMethod.invoke(changeLogInstance, dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB),
 					amazonDynamoDB);
+
 		} else if (changeSetMethod.getParameterTypes().length == 2
 				&& changeSetMethod.getParameterTypes()[0].equals(AmazonDynamoDB.class)
 				&& changeSetMethod.getParameterTypes()[1].equals(DynamoDBTemplate.class)) {
@@ -204,10 +238,12 @@ public class Dynamobee implements InitializingBean {
 
 			return changeSetMethod.invoke(changeLogInstance, amazonDynamoDB,
 					dynamoDBTemplate != null ? dynamoDBTemplate : new DynamoDBTemplate(amazonDynamoDB));
+
 		} else if (changeSetMethod.getParameterTypes().length == 0) {
 			logger.debug("method with no params");
 
 			return changeSetMethod.invoke(changeLogInstance);
+
 		} else {
 			throw new DynamobeeChangeSetException("ChangeSet method " + changeSetMethod.getName() +
 					" has wrong arguments list. Please see docs for more info!");
